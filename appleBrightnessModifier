@@ -1,0 +1,61 @@
+#! /bin/bash
+
+# usage: appleBrightnessModifier [-i OR -d]
+# -i : increment
+# -d : decrement
+# appleBrightnessModifier modifies apple_backlight
+# by incrementing or decrementing the value by 1.
+
+# AB_B : path to apple_backlight brightness
+# AB_M : path to apple_backlight max_brightness
+AB_B="/sys/class/backlight/apple_backlight/brightness"
+AB_M="/sys/class/backlight/apple_backlight/max_brightness"
+
+# CUR_BL : Current Backlight Level
+# MAX_BL : Maximum Backlight Level
+# MIN_BL : Minimum Backlight Level
+CUR_BL=$(cat $AB_B)
+MAX_BL=$(cat $AB_M)
+MIN_BL=0
+
+if [[ "$CUR_BL" =~ [0-9]+ ]]; then
+if [[ "$MAX_BL" =~ [0-9]+ ]]; then
+
+while getopts ":di" opt; do
+
+case $opt in
+	d)
+	if [ $CUR_BL -eq $MIN_BL ]; then
+		exit 0
+	elif [ $CUR_BL -gt $MIN_BL ]; then
+		CUR_BL=$(($CUR_BL-1))
+		echo $CUR_BL > $AB_B
+		exit 0
+	fi
+	;;
+	i)
+	if [ $CUR_BL -eq $MAX_BL ]; then
+		exit 0
+	elif [ $CUR_BL -lt $MAX_BL ]; then
+		CUR_BL=$(($CUR_BL+1))
+		echo $CUR_BL > $AB_B 
+		exit 0
+	fi
+	;;
+	\?)
+	echo "Invalid flag used; please use d or i."
+	;;
+esac
+
+shift $((OPTIND-1))
+done
+
+else
+	echo "ERROR: MAX_BL was not a number."
+	exit 1
+fi
+else
+	echo "ERROR: CUR_BL was not a number."
+	exit 1
+fi
+
